@@ -101,12 +101,18 @@ class Maze:
 
     def _create_cells(self):
         self._cells = [[None] * self.num_rows] * self.num_cols
+        start = self.x1
         for i in self._cells:
             for j in i:
-                node_p1 = Point(self.x1,self.y1)
-                node_p2 = Point(self.x1+self.cell_size_x, self.y1+self.cell_size_y)
-                cell_node = Cell(self.win, node_p1, node_p2)
+                self.node_p1 = Point(self.x1,self.y1)
+                self.node_p2 = Point(self.x1+self.cell_size_x, self.y1+self.cell_size_y)
+                cell_node = Cell(self.win, self.node_p1, self.node_p2)
                 j = cell_node
+                cell_node.draw()
+                self.x1 += self.cell_size_x
+            self.x1 = start
+            self.y1 += self.cell_size_y
+        print (self._cells)
         
 
         
@@ -116,7 +122,6 @@ class Maze:
 def main():
     win = Window(800, 600)
     mz = Maze(0,0,3,3,100,100,win)
-    mz._create_cells()
     win.wait_for_close()
 
     
