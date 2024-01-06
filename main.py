@@ -82,6 +82,16 @@ class Cell:
                 self.top.draw(self._win.canvas, "black")
             if self.bottom_wall:
                 self.bottom.draw(self._win.canvas, "black")
+            
+            #NOTS
+            if not self.left_wall:
+                self.left.draw(self._win.canvas, "white")
+            if  not self.right_wall:
+                self.right.draw(self._win.canvas, "white")
+            if not self.top_wall:
+                self.top.draw(self._win.canvas, "white")
+            if not self.bottom_wall:
+                self.bottom.draw(self._win.canvas, "white")
 
     def draw_move(self,to_cell, undo=False):
         move_line = Line(self.mid, to_cell.mid)
@@ -102,18 +112,20 @@ class Maze:
         self._create_cells()
 
     def _create_cells(self):
-        self._cells = [[None] * self.num_rows] * self.num_cols
+        self._cells = [[[None] for _  in range(self.num_rows)] for _ in range(self.num_cols)]
         start = self.x1
-        for i in self._cells:
-            for j in i:
+        for i in range(len(self._cells)):
+            for j in range(len(self._cells[i])):
                 self.node_p1 = Point(self.x1,self.y1)
                 self.node_p2 = Point(self.x1+self.cell_size_x, self.y1+self.cell_size_y)
                 cell_node = Cell(self.node_p1, self.node_p2, self.win)
-                j = cell_node
                 cell_node.draw()
                 self.x1 += self.cell_size_x
+                self._cells[i][j] = cell_node
+
             self.x1 = start
             self.y1 += self.cell_size_y
+        self._break_enterance_and_exit()
         self._animate()
 
     def _animate(self):
@@ -121,6 +133,13 @@ class Maze:
             self.win.redraw()
             sleep(0.05)
 
+    def _break_enterance_and_exit(self):
+        top_cell = self._cells[0][0]
+        bottom_cell = self._cells[-1][-1]
+        top_cell.top_wall = False
+        bottom_cell.bottom_wall = False
+        top_cell.draw()
+        bottom_cell.draw()
         
 def main():
     win = Window(800, 600)
