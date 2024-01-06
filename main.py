@@ -121,6 +121,7 @@ class Maze:
             random.seed(self.seed)
         self._create_cells()
         self._break_walls_r(self._cells[0][0])
+        self._reset_cells_visited()
         
 
     def _create_cells(self):
@@ -179,17 +180,18 @@ class Maze:
                 selected = random.choice(list(unvisited.keys()))
                 if selected == "left":
                     current.left_wall = False
-                    #unvisited[selected].right_wall = False
                 if selected == "right":
                     current.right_wall = False
-                    #unvisited[selected].right_wall = False
                 if selected == "top":
                     current.top_wall = False
-                    #unvisited[selected].top_wall = False
                 if selected == "bottom":
                     current.bottom_wall = False
-                    #unvisited[selected].bottom_wall_wall = False
                 self._break_walls_r(unvisited[selected])
+            
+    def _reset_cells_visited(self):
+        for i in range(len(self._cells)):
+            for j in range(len(self._cells[i])):
+                self._cells[i][j].visited = False
             
 
     def _adjacency_builder(self):
