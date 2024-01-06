@@ -1,5 +1,7 @@
 from tkinter import Tk, BOTH, Canvas
 from time import sleep
+import random
+
 
 ############# Window Class ##########
 class Window:
@@ -57,6 +59,11 @@ class Cell:
         self.x2 = point2.x
         self.y1 = point1.y
         self.y2 = point2.y
+        self.adj_left = None
+        self.adj_right = None
+        self.adj_top = None
+        self.adj_bottom = None
+        self.visited = False
 
 
         ##Points##
@@ -101,7 +108,7 @@ class Cell:
             move_line.draw(self._win.canvas, fill_color = "grey")
 
 class Maze:
-    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win = None):
+    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win = None, seed = None):
         self.x1 = x1
         self.y1 = y1
         self.num_rows = num_rows
@@ -109,7 +116,12 @@ class Maze:
         self.cell_size_x = cell_size_x
         self.cell_size_y = cell_size_y
         self.win = win
+        self.seed = seed
+        if self.seed is not None:
+            random.seed(self.seed)
         self._create_cells()
+        self._break_walls_r(self._cells[0][0])
+        
 
     def _create_cells(self):
         self._cells = [[[None] for _  in range(self.num_rows)] for _ in range(self.num_cols)]
@@ -122,10 +134,10 @@ class Maze:
                 cell_node.draw()
                 self.x1 += self.cell_size_x
                 self._cells[i][j] = cell_node
-
             self.x1 = start
             self.y1 += self.cell_size_y
         self._break_enterance_and_exit()
+        self._adjacency_builder()
         self._animate()
 
     def _animate(self):
@@ -140,6 +152,61 @@ class Maze:
         bottom_cell.bottom_wall = False
         top_cell.draw()
         bottom_cell.draw()
+
+    def _break_walls_r(self, i=None, j=None):
+        current = i
+        current.visited = True
+        while current:
+            can_visit = [i,j]
+            unvisited = {}
+            if current.adj_left is not None:
+                if current.adj_left.visited == False:
+                    unvisited["left"] = (current.adj_left)
+            if current.adj_right is not None:
+                if current.adj_right.visited == False:
+                    unvisited["right"] = (current.adj_right)
+            if current.adj_top is not None:
+                if current.adj_top.visited == False:
+                    unvisited["top"] = (current.adj_top)
+            if current.adj_bottom is not None:
+                if current.adj_bottom.visited == False:
+                    unvisited["bottom"] = (current.adj_bottom)
+            
+            if unvisited == {}:
+                current.draw()
+                return
+            else:
+                selected = random.choice(list(unvisited.keys()))
+                if selected == "left":
+                    current.left_wall = False
+                    #unvisited[selected].right_wall = False
+                if selected == "right":
+                    current.right_wall = False
+                    #unvisited[selected].right_wall = False
+                if selected == "top":
+                    current.top_wall = False
+                    #unvisited[selected].top_wall = False
+                if selected == "bottom":
+                    current.bottom_wall = False
+                    #unvisited[selected].bottom_wall_wall = False
+                self._break_walls_r(unvisited[selected])
+            
+
+    def _adjacency_builder(self):
+        for i in range(len(self._cells)):
+            for j in range(len(self._cells[i])):
+                cell_node = self._cells[i][j]
+                if j-1 >= 0:
+                    cell_node.adj_left = self._cells[i][j-1]
+                if j+1  < len(self._cells[i]):
+                    cell_node.adj_right = self._cells[i][j+1]
+                if i-1 >= 0:
+                    cell_node.adj_top = self._cells[i-1][j]
+                if i+1  < len(self._cells):
+                    cell_node.adj_bottom = self._cells[i+1][j]
+                print(self._cells[i][j].adj_bottom)
+            
+        
         
 def main():
     win = Window(800, 600)
