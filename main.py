@@ -1,4 +1,5 @@
 from tkinter import Tk, BOTH, Canvas
+from time import sleep
 
 ############# Window Class ##########
 class Window:
@@ -46,7 +47,7 @@ class Line:
 # Cell Class
 
 class Cell:
-    def __init__(self,_win, point1, point2, left_wall = True ,right_wall = True,top_wall = True,bottom_wall = True):
+    def __init__(self, point1, point2, _win = None, left_wall = True ,right_wall = True,top_wall = True,bottom_wall = True):
         self._win = _win
         self.left_wall = left_wall
         self.right_wall = right_wall
@@ -72,14 +73,15 @@ class Cell:
         self.bottom = Line(self.bl, self.br)
     
     def draw(self):
-        if self.left_wall:
-            self.left.draw(self._win.canvas, "black")
-        if self.right_wall:
-            self.right.draw(self._win.canvas, "black")
-        if self.top_wall:
-            self.top.draw(self._win.canvas, "black")
-        if self.bottom_wall:
-            self.bottom.draw(self._win.canvas, "black")
+        if self._win is not None:
+            if self.left_wall:
+                self.left.draw(self._win.canvas, "black")
+            if self.right_wall:
+                self.right.draw(self._win.canvas, "black")
+            if self.top_wall:
+                self.top.draw(self._win.canvas, "black")
+            if self.bottom_wall:
+                self.bottom.draw(self._win.canvas, "black")
 
     def draw_move(self,to_cell, undo=False):
         move_line = Line(self.mid, to_cell.mid)
@@ -89,7 +91,7 @@ class Cell:
             move_line.draw(self._win.canvas, fill_color = "grey")
 
 class Maze:
-    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win):
+    def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win = None):
         self.x1 = x1
         self.y1 = y1
         self.num_rows = num_rows
@@ -106,24 +108,26 @@ class Maze:
             for j in i:
                 self.node_p1 = Point(self.x1,self.y1)
                 self.node_p2 = Point(self.x1+self.cell_size_x, self.y1+self.cell_size_y)
-                cell_node = Cell(self.win, self.node_p1, self.node_p2)
+                cell_node = Cell(self.node_p1, self.node_p2, self.win)
                 j = cell_node
                 cell_node.draw()
                 self.x1 += self.cell_size_x
             self.x1 = start
             self.y1 += self.cell_size_y
-        print (self._cells)
-        
+        self._animate()
 
-        
-
+    def _animate(self):
+        if self.win is not None:
+            self.win.redraw()
+            sleep(0.05)
 
         
 def main():
     win = Window(800, 600)
-    mz = Maze(0,0,3,3,100,100,win)
+    mz = Maze(10,10,3,2,100,100,win)
     win.wait_for_close()
 
     
 
-main()
+if __name__ == "__main__":
+    main()
