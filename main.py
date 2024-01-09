@@ -122,6 +122,7 @@ class Maze:
         self._create_cells()
         self._break_walls_r(self._cells[0][0])
         self._reset_cells_visited()
+        self._solve()
         
 
     def _create_cells(self):
@@ -207,8 +208,27 @@ class Maze:
                 if i+1  < len(self._cells):
                     cell_node.adj_bottom = self._cells[i+1][j]
                 print(self._cells[i][j].adj_bottom)
-            
+    
+    def _solve(self):
+        return self._solve_r(self._cells[0][0])
+
+
+    def _solve_r(self,current):
+        self._animate()
+        self.current = current
+        self.current.visited = True
+        if self.current.visited == bottom_cell:
+            return True
         
+        if self.current.adj_right is not None and self.current.adj_right.visited == False:
+            if self.current.right_wall == False and self.current.adj_right.left_wall == False:
+                self.current.draw_move(self.current.adj_right)
+                if self._solve_r(self.current.adj_right):
+                    return True
+                else:
+                    self.current.draw_move(adj_right, "white")
+
+   
         
 def main():
     win = Window(800, 600)
