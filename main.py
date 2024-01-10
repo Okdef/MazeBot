@@ -105,7 +105,17 @@ class Cell:
         if undo == False:
             move_line.draw(self._win.canvas, fill_color = "red")
         else:
-            move_line.draw(self._win.canvas, fill_color = "grey")
+            move_line.draw(self._win.canvas, fill_color = "blue")
+
+    def has_path(self, adjacent_cell):  
+        if adjacent_cell == self.adj_right:
+            return self.right_wall == False and adjacent_cell.left_wall == False
+        elif adjacent_cell == self.adj_left:
+            return self.left_wall == False and adjacent_cell.right_wall == False
+        elif adjacent_cell == self.adj_top:
+            return self.top_wall == False and adjacent_cell.bottom_wall == False
+        elif adjacent_cell == self.adj_bottom:
+            return self.bottom_wall == False and adjacent_cell.top_wall == False
 
 class Maze:
     def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win = None, seed = None):
@@ -181,12 +191,16 @@ class Maze:
                 selected = random.choice(list(unvisited.keys()))
                 if selected == "left":
                     current.left_wall = False
+                    unvisited[selected].right_wall = False
                 if selected == "right":
                     current.right_wall = False
+                    unvisited[selected].left_wall = False
                 if selected == "top":
                     current.top_wall = False
+                    unvisited[selected].bottom_wall = False
                 if selected == "bottom":
                     current.bottom_wall = False
+                    unvisited[selected].top_wall = False
                 self._break_walls_r(unvisited[selected])
             
     def _reset_cells_visited(self):
@@ -214,20 +228,17 @@ class Maze:
 
 
     def _solve_r(self,current):
-        self._animate()
-        self.current = current
-        self.current.visited = True
-        if self.current.visited == bottom_cell:
+        current.visited = True
+        if current == self._cells[-1][-1]:
             return True
-        
-        if self.current.adj_right is not None and self.current.adj_right.visited == False:
-            if self.current.right_wall == False and self.current.adj_right.left_wall == False:
-                self.current.draw_move(self.current.adj_right)
-                if self._solve_r(self.current.adj_right):
+        for direction in ['adj_left', 'adj_right', 'adj_top', 'adj_bottom']:
+            next_cell = getattr(current, direction)
+            if next_cell is not None and not next_cell.visited and current.has_path(next_cell):
+                current.draw_move(next_cell)
+                if self._solve_r(next_cell):
                     return True
-                else:
-                    self.current.draw_move(adj_right, "white")
-
+                current.draw_move(next_cell, undo=True)
+        return False
    
         
 def main():
