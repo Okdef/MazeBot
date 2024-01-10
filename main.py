@@ -4,6 +4,7 @@ import random
 
 
 ############# Window Class ##########
+#              This class creates the GUI window amnd controls it
 class Window:
     def __init__(self,width,height, Title = "Notitle"):
         self.root_widget = Tk()
@@ -47,22 +48,22 @@ class Line:
         canvas.pack(fill=BOTH)
 
 # Cell Class
-
+# this class is responsible fot the cells of the maze
 class Cell:
     def __init__(self, point1, point2, _win = None, left_wall = True ,right_wall = True,top_wall = True,bottom_wall = True):
         self._win = _win
-        self.left_wall = left_wall
-        self.right_wall = right_wall
-        self.top_wall = top_wall
-        self.bottom_wall = bottom_wall
+        #walls stores the existance of a wall in each direction. This allows the use of loops and helps make the code more readable
+        self.walls = {"left":left_wall, "right":right_wall, "up":top_wall, "down":bottom_wall}
         self.x1 = point1.x
         self.x2 = point2.x
         self.y1 = point1.y
         self.y2 = point2.y
+        #adj is the adjacent cell in the respective direction. This may be more elegantly implemented with a dictionary as is seen with the walls dict
         self.adj_left = None
         self.adj_right = None
         self.adj_top = None
         self.adj_bottom = None
+        #visited stores wether a cell has been interacted with by a method, this needs to be reset to function correctly between method executions
         self.visited = False
 
 
@@ -79,27 +80,30 @@ class Cell:
         self.top = Line(self.tl, self.tr)
         self.bottom = Line(self.bl, self.br)
     
-    def draw(self):
+    #draw visualizes the cell
+    def draw(self):#
         if self._win is not None:
-            if self.left_wall:
+            if self.walls["left"]:
                 self.left.draw(self._win.canvas, "black")
-            if self.right_wall:
+            if self.walls["right"]:
                 self.right.draw(self._win.canvas, "black")
-            if self.top_wall:
+            if self.walls["up"]:
                 self.top.draw(self._win.canvas, "black")
-            if self.bottom_wall:
+            if self.walls["down"]:
                 self.bottom.draw(self._win.canvas, "black")
             
             #NOTS
-            if not self.left_wall:
+            #these check if the walls are not present, if not, they are "deleted" by drawing in white overtop of the black lines.
+            if not self.walls["left"]:
                 self.left.draw(self._win.canvas, "white")
-            if  not self.right_wall:
+            if  not self.walls["right"]:
                 self.right.draw(self._win.canvas, "white")
-            if not self.top_wall:
+            if not self.walls["up"]:
                 self.top.draw(self._win.canvas, "white")
-            if not self.bottom_wall:
+            if not self.walls["down"]:
                 self.bottom.draw(self._win.canvas, "white")
 
+    #draw_move visualizes the movement of the "solve" function
     def draw_move(self,to_cell, undo=False):
         move_line = Line(self.mid, to_cell.mid)
         if undo == False:
@@ -109,13 +113,13 @@ class Cell:
 
     def has_path(self, adjacent_cell):  
         if adjacent_cell == self.adj_right:
-            return self.right_wall == False and adjacent_cell.left_wall == False
+            return self.walls["right"] == False and adjacent_cell.walls["left"] == False
         elif adjacent_cell == self.adj_left:
-            return self.left_wall == False and adjacent_cell.right_wall == False
+            return self.walls["left"] == False and adjacent_cell.walls["right"] == False
         elif adjacent_cell == self.adj_top:
-            return self.top_wall == False and adjacent_cell.bottom_wall == False
+            return self.walls["up"] == False and adjacent_cell.walls["down"] == False
         elif adjacent_cell == self.adj_bottom:
-            return self.bottom_wall == False and adjacent_cell.top_wall == False
+            return self.walls["down"] == False and adjacent_cell.walls["up"] == False
 
 class Maze:
     def __init__(self, x1, y1, num_rows, num_cols, cell_size_x, cell_size_y, win = None, seed = None):
@@ -126,15 +130,19 @@ class Maze:
         self.cell_size_x = cell_size_x
         self.cell_size_y = cell_size_y
         self.win = win
+        #seed is the seed used to generate the maze
         self.seed = seed
         if self.seed is not None:
             random.seed(self.seed)
         self._create_cells()
         self._break_walls_r(self._cells[0][0])
         self._reset_cells_visited()
-        self._solve()
+        #solved allows us to access the status on the maze solution
+        self.solved = self._solve()
+        #I reset this to check the testcase for reset, this serves no practical function
+        self._reset_cells_visited()
         
-
+    #this creates a grid and then breaks the grid into a maze before building the adjacencies for each cell
     def _create_cells(self):
         self._cells = [[[None] for _  in range(self.num_rows)] for _ in range(self.num_cols)]
         start = self.x1
@@ -157,14 +165,16 @@ class Maze:
             self.win.redraw()
             sleep(0.05)
 
+    #this creates the openings for the maze
     def _break_enterance_and_exit(self):
         top_cell = self._cells[0][0]
         bottom_cell = self._cells[-1][-1]
-        top_cell.top_wall = False
-        bottom_cell.bottom_wall = False
+        top_cell.walls["up"] = False
+        bottom_cell.walls["down"] = False
         top_cell.draw()
         bottom_cell.draw()
 
+    #this "breaks" the walls to turn the generated grid into a maze
     def _break_walls_r(self, i=None, j=None):
         current = i
         current.visited = True
@@ -179,28 +189,18 @@ class Maze:
                     unvisited["right"] = (current.adj_right)
             if current.adj_top is not None:
                 if current.adj_top.visited == False:
-                    unvisited["top"] = (current.adj_top)
+                    unvisited["up"] = (current.adj_top)
             if current.adj_bottom is not None:
                 if current.adj_bottom.visited == False:
-                    unvisited["bottom"] = (current.adj_bottom)
+                    unvisited["down"] = (current.adj_bottom)
             
             if unvisited == {}:
                 current.draw()
                 return
             else:
-                selected = random.choice(list(unvisited.keys()))
-                if selected == "left":
-                    current.left_wall = False
-                    unvisited[selected].right_wall = False
-                if selected == "right":
-                    current.right_wall = False
-                    unvisited[selected].left_wall = False
-                if selected == "top":
-                    current.top_wall = False
-                    unvisited[selected].bottom_wall = False
-                if selected == "bottom":
-                    current.bottom_wall = False
-                    unvisited[selected].top_wall = False
+                selected = random.choice(list(unvisited.keys()))#this selects a random direction and breaks the selected wall
+                current.walls[selected] = False
+                unvisited[selected].walls[self.opposite(selected)] = False
                 self._break_walls_r(unvisited[selected])
             
     def _reset_cells_visited(self):
@@ -208,7 +208,7 @@ class Maze:
             for j in range(len(self._cells[i])):
                 self._cells[i][j].visited = False
             
-
+    #this allows the adjacent cells to a cell to be checked
     def _adjacency_builder(self):
         for i in range(len(self._cells)):
             for j in range(len(self._cells[i])):
@@ -221,12 +221,12 @@ class Maze:
                     cell_node.adj_top = self._cells[i-1][j]
                 if i+1  < len(self._cells):
                     cell_node.adj_bottom = self._cells[i+1][j]
-                print(self._cells[i][j].adj_bottom)
+                #print(self._cells[i][j].adj_bottom)
     
     def _solve(self):
         return self._solve_r(self._cells[0][0])
 
-
+    #this actually does the solving
     def _solve_r(self,current):
         current.visited = True
         if current == self._cells[-1][-1]:
@@ -234,19 +234,38 @@ class Maze:
         for direction in ['adj_left', 'adj_right', 'adj_top', 'adj_bottom']:
             next_cell = getattr(current, direction)
             if next_cell is not None and not next_cell.visited and current.has_path(next_cell):
-                current.draw_move(next_cell)
+                if self.win is not None: current.draw_move(next_cell)
                 if self._solve_r(next_cell):
                     return True
-                current.draw_move(next_cell, undo=True)
+                if self.win is not None: current.draw_move(next_cell, undo=True)
         return False
+    
+    def opposite(self,direction):
+        if direction == "left":
+            return "right"
+        if direction == "right":
+            return "left"
+        if direction == "up":
+            return "down"
+        if direction == "down":
+            return "up"
+        else:
+            print(f"opposite OOB{direction}")
+
    
         
 def main():
     win = Window(800, 600)
     mz = Maze(10,10,3,2,100,100,win)
     win.wait_for_close()
+    return mz.solved
 
     
 
 if __name__ == "__main__":
     main()
+
+##
+#O
+#K
+##

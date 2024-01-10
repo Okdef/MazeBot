@@ -18,7 +18,7 @@ class Tests(unittest.TestCase):
             num_rows
         )
 
-    def test(self):
+    def test_unvisit(self):
         num_cols = 5
         num_rows = 5
         m2 = Maze(0,0,num_rows,num_cols,10,10)
@@ -27,5 +27,13 @@ class Tests(unittest.TestCase):
             for j in range(len(m2._cells[i])):
                 visit_check.append(m2._cells[i][j].visited)
         self.assertEqual(visit_check, [False]*(num_rows*num_cols))
+
+    def test_solved(self):
+        num_cols = 2
+        num_rows = 2
+        m3 = Maze(0,0, num_rows,num_cols,10,10)
+        self.assertEqual(m3.solved, True)
+
+
 if __name__ == "__main__": unittest.main()
 
